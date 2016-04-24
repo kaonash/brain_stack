@@ -1,0 +1,193 @@
+template: "item*"
+settings:
+  number_of_shards: 3
+  number_of_replicas: 1
+  analysis:
+    filter:
+      word_delimiter_preserved:
+        type: word_delimiter
+        preserve_original: true
+    char_filter:
+      hiragana_katakana:
+        type: mapping
+        mappings:
+          - ぁ=>ァ
+          - あ=>ア
+          - ぃ=>ィ
+          - い=>イ
+          - ぅ=>ゥ
+          - う=>ウ
+          - ぇ=>ェ
+          - え=>エ
+          - ぉ=>ォ
+          - お=>オ
+          - か=>カ
+          - が=>ガ
+          - き=>キ
+          - ぎ=>ギ
+          - く=>ク
+          - ぐ=>グ
+          - け=>ケ
+          - げ=>ゲ
+          - こ=>コ
+          - ご=>ゴ
+          - さ=>サ
+          - ざ=>ザ
+          - し=>シ
+          - じ=>ジ
+          - す=>ス
+          - ず=>ズ
+          - せ=>セ
+          - ぜ=>ゼ
+          - そ=>ソ
+          - ぞ=>ゾ
+          - た=>タ
+          - だ=>ダ
+          - ち=>チ
+          - ぢ=>ヂ
+          - っ=>ッ
+          - つ=>ツ
+          - づ=>ヅ
+          - て=>テ
+          - で=>デ
+          - と=>ト
+          - ど=>ド
+          - な=>ナ
+          - に=>ニ
+          - ぬ=>ヌ
+          - ね=>ネ
+          - の=>ノ
+          - は=>ハ
+          - ば=>バ
+          - ぱ=>パ
+          - ひ=>ヒ
+          - び=>ビ
+          - ぴ=>ピ
+          - ふ=>フ
+          - ぶ=>ブ
+          - ぷ=>プ
+          - へ=>ヘ
+          - べ=>ベ
+          - ぺ=>ペ
+          - ほ=>ホ
+          - ぼ=>ボ
+          - ぽ=>ポ
+          - ま=>マ
+          - み=>ミ
+          - む=>ム
+          - め=>メ
+          - も=>モ
+          - ゃ=>ャ
+          - や=>ヤ
+          - ゅ=>ュ
+          - ゆ=>ユ
+          - ょ=>ョ
+          - よ=>ヨ
+          - ら=>ラ
+          - り=>リ
+          - る=>ル
+          - れ=>レ
+          - ろ=>ロ
+          - ゎ=>ヮ
+          - わ=>ワ
+          - ゐ=>ヰ
+          - ゑ=>ヱ
+          - を=>ヲ
+          - ん=>ン
+          - ゔ=>ヴ
+          - ゕ=>ヵ
+          - ゖ=>ヶ
+    analyzer:
+      name_analyzer:
+        tokenizer: standard
+        filter:
+          - standard
+          - word_delimiter_preserved # FireBird -> "Fire" "Bird" "FireBird"
+          - cjk_width # 半角カナ -> 全角カナ
+          - asciifolding # õ -> o
+          - lowercase # O -> o
+          - cjk_bigram # "今" "日" "は" -> "今日" "日は"
+        char_filter:
+          - hiragana_katakana
+      description_analyzer:
+        tokenizer: standard
+        filter:
+          - standard
+          - word_delimiter_preserved
+          - cjk_width
+          - asciifolding
+          - lowercase
+          - cjk_bigram
+          - stop
+        char_filter:
+          - hiragana_katakana
+      symbol_analyzer:
+        tokenizer: keyword
+        filter:
+          - lowercase
+      japanese_raw_analyzer:
+        tokenizer: whitespace
+        filter:
+          - standard
+          - word_delimiter_preserved # FireBird -> "Fire" "Bird" "FireBird"
+          - cjk_width # 半角カナ -> 全角カナ
+          - asciifolding # õ -> o
+          - lowercase # O -> o
+        char_filter:
+          - hiragana_katakana
+mappings:
+  _default_:
+    _all:
+      enabled: false
+    dynamic_templates:
+      - title_template:
+          match: "title|.*_title|name|.*_name"
+          match_pattern: "regex"
+          mapping:
+            type: multi_field
+            fields:
+              "{name}":
+                type: string
+                analyzer: name_analyzer
+              raw:
+                type: string
+                analyzer: symbol_analyzer
+              japanese_raw:
+                type: string
+                analyzer: japanese_raw_analyzer
+      - description_template:
+          match: "description|.*_description|text|.*_text"
+          match_pattern: "regex"
+          mapping:
+            type: string
+            analyzer: description_analyzer
+      - date_template:
+          match: "*_date"
+          mapping:
+            type: date
+      - symbol_template:
+          match: "symbol"
+          mapping:
+            type: multi_field
+            fields:
+              "{name}":
+                type: string
+                analyzer: symbol_analyzer
+              raw:
+                type: string
+                index: not_analyzed
+      - generic_string_template:
+          match: "*"
+          match_mapping_type: string
+          mapping:
+            type: string
+            index: not_analyzed
+    properties:
+      timestamp:
+        type: date
+  latest:
+    _parent:
+      type: historical
+    properties:
+      booster:
+        type: double

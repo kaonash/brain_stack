@@ -10,6 +10,13 @@ defmodule BrainStack.ItemController do
     # render(conn, "top.html")
   # end
 
+  def create(conn, %{"text" => text} = params) do
+    title = "test"
+    item = Item.new(title, text)
+    {:ok, 200, _} = Query.insert(item)
+    render(conn, "top.html")
+  end
+
   def new(conn, %{"text" => text} = params) do
     title = "test"
     item = Item.new(title, text)

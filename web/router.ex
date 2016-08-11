@@ -16,13 +16,13 @@ defmodule BrainStack.Router do
   scope "/", BrainStack do
     pipe_through :browser # Use the default browser stack
 
-    resources "items", ItemController, only: [:new, :show]
+    resources "items", ItemController, only: [:new, :show, :create]
   end
 
   scope "/api", BrainStack do
     pipe_through :api
 
-    resources "items", ItemController, only: [:new]
+    resources "items", ItemController, only: [:new, :create]
   end
 
   # Other scopes may use custom stacks.
